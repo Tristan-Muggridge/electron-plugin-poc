@@ -1,11 +1,24 @@
-// See the Electron documentation for details on how to use preload scripts:
-// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
+import { contextBridge } from 'electron';
 
-import { contextBridge } from 'electron'
+export interface SDK {
+  versions: {
+    node: () => string;
+    chrome: () => string;
+    electron: () => string;
+  };
+  someUtility: () => string;
+}
 
-contextBridge.exposeInMainWorld('versions', {
-  node: () => process.versions.node,
-  chrome: () => process.versions.chrome,
-  electron: () => process.versions.electron
-  // we can also expose variables, not just functions
-})
+const sdk: SDK = {
+  versions: {
+    node: () => process.versions.node,
+    chrome: () => process.versions.chrome,
+    electron: () => process.versions.electron,
+  },
+  someUtility: () => 'This is a utility function',
+};
+
+// Expose the SDK to the renderer process
+contextBridge.exposeInMainWorld('SDK', sdk);
+
+export default sdk;

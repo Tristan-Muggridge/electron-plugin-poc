@@ -34,7 +34,7 @@ async function loadAndRunExtensions() {
     for (const path in context) {
       const module = await context[path](); // Dynamically import each module
       if (module?.default) {
-        module.default(); // Call the `main()` function (assuming it's exported as the default)
+        module.default(window.SDK); // Call the `main()` function (assuming it's exported as the default)
       }
     }
 }
