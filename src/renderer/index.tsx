@@ -28,17 +28,19 @@
 
 import '../index.css';
 
-async function loadAndRunExtensions() {
-    const context = import.meta.glob('../extensions/**/script.ts'); // Using Vite's glob import
-  
-    for (const path in context) {
-      const module = await context[path](); // Dynamically import each module
-      if (module?.default) {
-        module.default(window.SDK); // Call the `main()` function (assuming it's exported as the default)
-      }
-    }
-}
-
-loadAndRunExtensions();
-
 console.log('👋 This message is being logged by "renderer.ts", included via Vite');
+
+import React from "react";
+import { createRoot } from "react-dom/client";
+import App from './App';
+
+// Render the application
+const container = document.getElementById("root");
+if (container) {
+  const root = createRoot(container);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
