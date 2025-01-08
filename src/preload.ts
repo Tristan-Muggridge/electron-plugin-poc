@@ -1,13 +1,4 @@
-import { contextBridge } from 'electron';
-
-export interface SDK {
-  versions: {
-    node: () => string;
-    chrome: () => string;
-    electron: () => string;
-  };
-  someUtility: () => string;
-}
+import { contextBridge, ipcRenderer } from 'electron';
 
 const sdk: SDK = {
   versions: {
@@ -16,6 +7,11 @@ const sdk: SDK = {
     electron: () => process.versions.electron,
   },
   someUtility: () => 'This is a utility function',
+  IO: {
+    writeToFile(filePath, fileName, content) {
+      return ipcRenderer.invoke("write-to-file", { filePath, fileName, content })
+    },
+  }
 };
 
 // Expose the SDK to the renderer process

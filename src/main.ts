@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import started from 'electron-squirrel-startup';
 
@@ -6,6 +6,22 @@ import started from 'electron-squirrel-startup';
 if (started) {
   app.quit();
 }
+
+import fs from 'fs'
+
+ipcMain.handle("write-to-file", async (event, { filePath, fileName, content }: { filePath: string; fileName: string; content: string }) => {
+  try {
+
+    console.log(filePath, fileName, content)
+
+    fs.mkdirSync(filePath, {recursive: true});
+    fs.writeFileSync(path.join(filePath, fileName), content, "utf8");
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
 
 const createWindow = () => {
   // Create the browser window.
