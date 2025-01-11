@@ -1,4 +1,4 @@
-export {};
+import { ReactNode } from 'react';
 
 declare global {
   export interface SDK {
@@ -11,6 +11,11 @@ declare global {
     IO: {
       writeToFile: (filePath: string, fileName: string, content: string) => ReturnType<IpcRenderer['invoke']>;
     }
+  }
+
+  export interface Extension {
+    execute: (props: {sdk: SDK}) => ReactNode;
+    config: ExtensionConfiguration;
   }
   
   interface Window {
