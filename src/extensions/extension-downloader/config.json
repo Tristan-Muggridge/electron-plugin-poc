@@ -1,0 +1,14 @@
+{
+    "author": "Tristan Muggridge",
+    "version": "1.0",
+    "name": "Extension Downloader",
+    "description": "an extension to help manage other extensions, pretty meta...",
+    "permissions": {
+        "files": {
+            "read": true,
+            "write": true
+        }
+    },
+    "source": "https://github.com/Tristan-Muggridge/electron-plugin-poc/tree/main/src/extensions/extension-downloader",
+    "enabled": true
+}

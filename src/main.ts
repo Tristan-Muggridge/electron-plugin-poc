@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, BaseWindow } from 'electron';
 import path from 'path';
 import started from 'electron-squirrel-startup';
 
@@ -23,6 +23,35 @@ ipcMain.handle("write-to-file", async (event, { filePath, fileName, content }: {
   }
 });
 
+ipcMain.handle("read-from-file", async (event, { path }: { path: string }) => {
+  try {
+    const content = fs.readFileSync(path, "utf8");
+    console.log(content)
+    
+    return content;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.on('confirmationDialogue', (event, {id, title, message, onConfirm, onCancel}: {id: number} & ConfirmationDialogueHandlerParams) => {
+  console.log(title, message, onConfirm, onCancel)
+  
+  dialog.showMessageBox((window), {
+      'type': 'question',
+      title,
+      message,
+      'buttons': [
+          'Yes',
+          'No'
+      ]
+  }).then(result => {
+    window.webContents.send('confirmationResponse', result.response === 0);
+  });
+})
+
+let window: BaseWindow;
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -43,6 +72,8 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+
+  window = mainWindow;
 };
 
 // This method will be called when Electron has finished

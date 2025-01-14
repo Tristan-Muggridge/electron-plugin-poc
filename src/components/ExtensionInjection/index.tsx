@@ -36,8 +36,6 @@ const ExtensionRenderer: React.FC<{ extension: Extension }> = ({ extension }) =>
         )}
       </div>
     );
-  };
+};
   
-  
-
 export default ExtensionInjector;

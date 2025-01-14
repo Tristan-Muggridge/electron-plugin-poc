@@ -4,13 +4,13 @@ export type ExtensionConfiguration = {
     version: string;
     name: string;
     description: string;
-    permissions: ExtensionPermissions[];
+    permissions?: {
+        files?: {
+            read: boolean,
+            write?: boolean
+        }
+    };
     source: string;
     enabled: boolean;
     loadOrder?: number;
-}
-
-export enum ExtensionPermissions {
-    FILE_READ,
-    FILE_WRITE,
 }

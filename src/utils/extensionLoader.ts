@@ -5,21 +5,30 @@ export default async function loadAndRunExtensions() {
     const components: Extension[] = [];
 
     // Dynamically load all extensions
-    for (const path in context) {
+    for (const filepath in context) {
         try {
-            console.log(`Loading extension from: ${path}`);
-            const module = await context[path](); // Dynamically import each module
+
+            const config = await window.SDK.IO.readFromFile('./src/extensions/'+filepath.split('script.tsx').at(0)+'/config.json')
+            const jsonConfig = JSON.parse(config)
+
+            console.log(`Loading extension from: ${filepath}`);
+            const module = await context[filepath](); // Dynamically import each module
             
-            const extension = module.default as Extension; // Access the default export
+            const extension = {
+                config: jsonConfig,
+                execute: module.default
+            } as Extension; // Access the default export
+
             console.log(extension?.config, extension?.execute); // Log config and execute
 
             if (extension?.config && extension?.execute) {
                 components.push(extension); // Add the extension to the list
             } else {
-                console.warn(`Extension at ${path} is missing required properties.`);
+                console.warn(`Extension at ${filepath} is missing required properties.`);
             }
         } catch (error) {
-            console.error(`Error loading extension at ${path}:`, error);
+            console.error(`Error loading extension at ${filepath}:`, error);
+            continue
         }
     }
 

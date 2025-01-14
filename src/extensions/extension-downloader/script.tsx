@@ -1,90 +1,63 @@
 import React, { useCallback } from "react";
-import { ExtensionPermissions } from "../../types/extensions";
+import extensions from "../../data/extensions"
 
-const extensions = [
-  {
-    name: 'hello-world',
-    description: 'Hello World',
-    script: `
-import React from "react";
+export default function ({sdk}: {sdk: SDK}) {
 
-export default function Main({sdk}: {sdk: SDK}) {
-  console.log("it worked!");
-
-  return (
-    <div className="text-2xl font-bold">
-      Hello World!
-    </div>
-  )
-}
- `},
-  {
-    name: 'version-info',
-    description: 'Version Info',
-    script: `
-import React, { useEffect } from "react";
-  
-export default function Main({ sdk }: { sdk: SDK }) {
-  const { versions } = sdk;
-
-  useEffect(() => {
-    console.log({
-      chrome: versions.chrome(),
-      NodeJS: versions.node(),
-      electron: versions.electron(),
-    });
-  }, []);
-
-  return (
-    <ul>
-      <li>Chrome (v{versions.chrome()})</li>
-      <li>Node.js (v{versions.node()})</li>
-      <li>Electron (v{versions.electron()})</li>
-    </ul>
-  );
-}
- `}
-]
-
-const config: Extension['config'] = {
-    author: "Tristan Muggridge",
-    version: "1.0",
-    name: "Extension Downloader",
-    description: "an extension to help manage other extensions, pretty meta...",
-    permissions: [ExtensionPermissions.FILE_WRITE, ExtensionPermissions.FILE_READ],
-    source: "https://github.com/Tristan-Muggridge/electron-plugin-poc/tree/main/src/extensions/extension-downloader",
-    enabled: true
-}
-
-const extension: Extension = {
-    config,
-    execute: function ({sdk}: {sdk: SDK}) {
-        const installOnClick = useCallback(async (extension: typeof extensions[0]) => {
-            const result = await sdk.IO.writeToFile(`./src/extensions/${extension.name}`, 'script.tsx', extension.script)
-            
-            if (result.success) {
-                alert("Installed successfully!");
-            } else {
-                alert(`Failed to install: ${result.error}`);
-            }
-        }, [sdk])
+  const install = async (extension: typeof extensions[number]) => {
+    const result = await Promise.all([
+      await sdk.IO.writeToFile(`./src/extensions/${extension.config.name}`, 'script.tsx', extension.src),
+      await sdk.IO.writeToFile(`./src/extensions/${extension.config.name}`, 'config.json', JSON.stringify(extension.config, undefined, 2)),
+    ]);
     
-        return (
-            <div className="flex flex-col gap-4">
-                <h2>Extension Marketplace</h2>
-                <ul className="flex flex-col gap-1">
-                {
-                    extensions.map(extension => (
-                        <li key={extension.name} className="flex justify-between px-2">
-                            <p>{extension.description}</p>
-                            <button onClick={() => installOnClick(extension)} className="border text-sm border-zinc-600 p-1 rounded hover:bg-zinc-500 transition-colors">Install</button>
-                        </li>
-                    ))
-                }
-                </ul>
-            </div>
-        )  
+    if (result.every(promise => promise.success)) {
+        alert("Installed successfully!");
+    } else {
+        alert(`Failed to install: ${result.map(result => result.error).join('\n')}`);
     }
-}
+  }
 
-export default extension;
+  const installOnClick = useCallback(async (extension: typeof extensions[0]) => {
+
+      if (extension.config.permissions) window.ipcRenderer.confirmationDialogue({
+        title: `${extension.config.name} Authorisation`, 
+        message: `Do you authorise ${extension.config.name} to use the following permissions? \n${
+          Object.keys(extension.config.permissions.files).map(perm => `File ${perm}`).join(', ')
+        }`,
+      });
+
+      else (install(extension))
+
+      console.log(extension.config)
+
+      // const confirmed = await sdk.ConfirmationDialogue.invoke({
+      //   title: `${extension.config.name} Authorisation`, 
+      //   message: `this application requires the following permissions: \n${extension.config.permissions.map(perm => ExtensionPermissionToString[perm]).join(', ')}`,
+      // })
+      
+      // console.log(confirmed)
+      window.ipcRenderer.confirmationResponse( async (event, response) => {
+        if (response === false) return;
+        install(extension);
+      })
+  }, [sdk])
+
+  return (
+      <div className="flex flex-col gap-4">
+          <h2>Extension Marketplace</h2>
+
+          <ul className="flex flex-col gap-1">
+          {
+              Object.entries(extensions).map(([id, extension]) => (
+                  <li key={id} className="flex justify-between px-2">
+                      <p>{extension.config.name}</p>
+                      <button onClick={() => installOnClick(extension)} className="border text-sm border-zinc-600 p-1 rounded hover:bg-zinc-500 transition-colors">
+                        Install
+                      </button>
+                  </li>
+              ))
+          }
+          </ul>
+
+      </div>
+  )  
+}
